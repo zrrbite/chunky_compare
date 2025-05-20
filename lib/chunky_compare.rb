@@ -47,8 +47,17 @@ class ChunkyCompare
     draw_boxes(diff_img, boxes)
 
     diff_img.save(output_path)
-    puts "✅ #{changed_pixels.size} pixels differed (#{percent(changed_pixels.size, width * height)}%)"
-    puts "📦 Found #{boxes.size} bounding boxes"
+
+    total = width * height
+    changed = changed_pixels.size
+    
+    if changed == 0
+      puts "✅ Images are identical"
+    else
+      percent = ((100.0 * changed) / total).round(2)
+      puts "❌ #{changed} pixels differed (#{percent}%)"
+      puts "📦 Found #{boxes.size} bounding boxes"
+    end
     puts "🖼️  Saved to #{output_path}"
   end
 
