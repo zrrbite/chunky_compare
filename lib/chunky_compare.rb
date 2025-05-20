@@ -42,7 +42,8 @@ class ChunkyCompare
       }
     }
 
-    boxes = merge_boxes(changed_pixels, box_merge_distance)
+    #boxes = merge_boxes(changed_pixels, box_merge_distance)
+    boxes = extract_connected_regions(width, height, changed_pixels)
 
     draw_boxes(diff_img, boxes)
 
@@ -62,6 +63,51 @@ class ChunkyCompare
   end
 
   private
+
+  def extract_connected_regions(width, height, points)
+    mask = Array.new(height) { Array.new(width, false) }
+    points.each { |x, y| mask[y][x] = true }
+
+    visited = Array.new(height) { Array.new(width, false) }
+    regions = []
+
+    height.times { |y|
+      width.times { |x|
+        next unless mask[y][x] && !visited[y][x]
+
+        queue = [[x, y]]
+        visited[y][x] = true
+        min_x = max_x = x
+        min_y = max_y = y
+
+        while queue.any?
+          cx, cy = queue.pop
+
+          min_x = [min_x, cx].min
+          max_x = [max_x, cx].max
+          min_y = [min_y, cy].min
+          max_y = [max_y, cy].max
+
+          [-1, 0, 1].each { |dx|
+            [-1, 0, 1].each { |dy|
+              next if dx == 0 && dy == 0
+              nx, ny = cx + dx, cy + dy
+
+              next if nx < 0 || ny < 0 || ny >= height || nx >= width
+              next if visited[ny][nx] || !mask[ny][nx]
+
+              visited[ny][nx] = true
+              queue << [nx, ny]
+            }
+          }
+        end
+
+        regions << [min_x, min_y, max_x, max_y]
+      }
+    }
+
+    regions
+  end
 
   def merge_boxes(points, distance)
     boxes = []
