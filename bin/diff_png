@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/chunky_compare'
+require 'optparse'
+
+options = {
+  golden: nil,
+  actual: nil,
+  output: "diff.png",
+  alpha: true,
+  box_distance: 5
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: chunky_compare --golden path --actual path [options]"
+
+  opts.on("--golden FILE", "Path to golden reference PNG") { |v| options[:golden] = v }
+  opts.on("--actual FILE", "Path to actual test PNG") { |v| options[:actual] = v }
+  opts.on("--output FILE", "Path to save diff PNG (default: diff.png)") { |v| options[:output] = v }
+  opts.on("--[no-]alpha", "Enable/disable alpha comparison (default: true)") { |v| options[:alpha] = v }
+  opts.on("--box-distance N", Integer, "Pixel proximity for grouping boxes (default: 5)") { |v| options[:box_distance] = v }
+end.parse!
+
+unless options[:golden] && options[:actual]
+  abort("❌ Please provide both --golden and --actual image paths.\nTry --help")
+end
+
+ChunkyCompare.new(**options).run
